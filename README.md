@@ -52,3 +52,4 @@ This Repo should help you to get a simple Python website setup using the Flask f
   - HTML: [W3Schools](https://www.w3schools.com/html/)
   - Python: [W3Schools](https://www.w3schools.com/python/)
   - Flask: [Official Docs](https://flask.palletsprojects.com/en/1.1.x/)
+
