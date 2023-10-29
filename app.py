@@ -46,13 +46,26 @@ def search_reddit(search_word, subreddit_name, search_limit):
         submissions = reddit.subreddit('all').search(search_word, limit=search_limit)
     authors, comments, urls, titles = [], [], [], []
     # Iterate through the comments and extract their data
+    counter = 0
     for submission in submissions:
+        if (counter >= search_limit):
+            break
         authors.append(submission.author.name)
-        #print(f"Author: {submission.author}\n")
         comments.append(submission.selftext)
-        #print(f"Comment: {submission.selftext}")
         urls.append(submission.url)
         titles.append(submission.title)
+        counter+=1
+        for comment in submission.comments:
+            if (counter >= search_limit):
+                break
+            if (comment.author):
+                authors.append(comment.author.name)
+            else:
+                authors.append('')
+            comments.append(comment.body)
+            urls.append(submission.url)
+            titles.append(submission.title)
+            counter+=1
     raw_data = pd.DataFrame({'Title': titles, 'Comment':comments, 'URL':urls, 'Author':authors})
     return raw_data
 analyzer = SentimentIntensityAnalyzer()
@@ -68,16 +81,44 @@ def get_emotion_emoji(score):
         else:
             return "😐"  # Neutral
 def score(phrase):
-    return get_emotion_emoji(analyzer.polarity_scores(phrase)['compound']) + str(round(analyzer.polarity_scores(phrase)['compound'], 1))
+    num = analyzer.polarity_scores(phrase)['compound']
+    return get_emotion_emoji(num) + str(round(num, 1))
 def score_data(data):
+    """
+    Input: DataFrame
+    Output: DataFrame
+    """
+    if raw_data.shape[0] == 0:
+        print('No results found')
+        return
     new_data = data.copy()
     new_data.drop(axis=0, labels=data.index[data['Comment'].str.len() == 0], inplace=True)
     new_data['Sentiment'] = new_data['Comment'].apply(score)
-    #sentiments = new_data[['Author', 'Sentiment']].groupby('Author').mean()
-    return new_data#, np.mean(sentiments['Sentiment'])
+    new_data['Comment'] = new_data['Comment']
+    return new_data
 def score_keyword(search_word, subreddit_name, search_limit):
     raw_data = search_reddit(search_word, subreddit_name, search_limit)
     return score_data(raw_data)
+def top3bot3(data):
+    """
+    Input: DataFrame
+    Output: tuple (DataFrame, DataFrame)
+    """
+    new_data = data.sort_values('Sentiment', ascending=False)
+    top3 = new_data.iloc[:3, :]
+    bot3 = new_data.iloc[-3:, :]
+    return top3, bot3
+def calculate_average_sentiment(data):
+    sentiments = data[['Author', 'Sentiment']].groupby('Author').mean()
+    return np.mean(sentiments['Sentiment'])
+def format_data(data):
+    """
+    Input: DataFrame
+    Output: DataFrame
+    """
+    new_data = data.copy()
+    new_data['Comment'] = new_data['Comment'].str[:241]
+    return new_data
 
 if __name__ == "__main__": #checking if __name__'s value is '__main__'. __name__ is an python environment variable who's value will always be '__main__' till this is the first instatnce of app.py running
     app.run(debug=True,port=4949) #running flask (Initalised on line 4)
