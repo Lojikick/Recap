@@ -8,6 +8,7 @@ import nltk
 nltk.download('vader_lexicon')
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 pd.options.mode.chained_assignment = None
+from sklearn.model_selection import GridSearchCV
 
 app = Flask(__name__) #initialising flask
 
@@ -80,21 +81,77 @@ def get_emotion_emoji(score):
             return "😊"  # Somewhat happy
         else:
             return "😐"  # Neutral
+def process_data(data):
+    new_data = data.copy()
+    comments = new_data['Comment']
+    comments = comments.str.lower()
+    comments = comments.str.replace(r'http.*($|\s)', '') # Get rid of images
+    comments = comments.str.replace(r'[^\w|_|\s]|\n', ' ') # Get rid of punctuation and newlines
+    new_data['Split'] = comments.str.split() # Create split column
+    new_data = new_data[new_data['Split'].str.len() > 1] # Remove empty or one word rows
+    new_data = new_data.set_index('Author')
+def words_in_texts(words, texts):
+    """
+    Args:
+        words (list): words to find
+        texts (Series): strings to search in
+    
+    Returns:
+        A 2D NumPy array of 0s and 1s with shape (n, p) where 
+        n is the number of texts and p is the number of words.
+    """
+    indicator_array = np.array([[int(isinstance(i, str)) for i in texts.str.extract("("+w+")", expand=False).tolist()] \
+                                for w in words]).transpose()
+    return indicator_array
+hard_words = ['fail', 'failing', 'suck', 'hard', 'difficult', 'dumb', 'drop', 'dropping', 'droppin', 'desperate', 'impossible',
+    "hard", "strenuous", "arduous", "laborious", "heavy", "tough",
+    "onerous", "burdensome", "demanding", "punishing", "grueling",
+    "grinding", "back-breaking", "painful", "exhausting", "tiring",
+    "fatiguing", "wearing", "wearying", "wearisome", "hellish",
+    "killing", "knackering", "toilsome", "exigent", "problematic",
+    "puzzling", "baffling", "perplexing", "confusing", "mystifying",
+    "mysterious", "complicated", "complex", "involved", "intricate",
+    "knotty", "thorny", "ticklish", "obscure", "abstract", "abstruse",
+    "recondite", "enigmatic", "impenetrable", "unfathomable", "over one's head",
+    "above one's head", "beyond one", "fiddly", "sticky",
+    "gnarly", "wildering", "involute", "involuted", "😭", ":(", "wtf"]
+easy_words = ["easy", "simple", "effortless", "light", "gentle", "smooth",
+    "easygoing", "simple", "undemanding", "unpunishing", "easy",
+    "smooth", "effortless", "relaxing", "refreshing", "restful",
+    "restorative", "refreshing", "restful", "restorative", "heavenly",
+    "delightful", "invigorating", "easy", "straightforward", "clear",
+    "obvious", "transparent", "self-explanatory", "clear", "self-evident",
+    "intelligible", "comprehensible", "simple", "uncomplicated", "easy",
+    "plain", "clear", "intelligible", "comprehensible", "simple",
+    "shallow", "superficial", "commonplace", "basic", "self-explanatory",
+    "easy", "troublesome", "straightforward", "clear", "obvious", "simple",
+    'trivial', 'A+', 'easy', 'so easy', 'excellent', 'free', 'chill', 'cool', 'dubs']
 def score(phrase):
     num = analyzer.polarity_scores(phrase)['compound']
     return get_emotion_emoji(num) + str(round(num, 1))
+def predict_difficulty(input_string):
+    input_string = input_string.lower()  # Convert the input string to lowercase for case-insensitive matching
+
+    # Split the input string into words
+    words = input_string.split()
+
+    hard_score = sum(1 for word in words if word in hard_words)
+    easy_score = sum(1 for word in words if word in easy_words)
+    if hard_score + easy_score == 0:
+        return 0.5
+    return hard_score/(hard_score + easy_score)
 def score_data(data):
     """
     Input: DataFrame
     Output: DataFrame
     """
-    if raw_data.shape[0] == 0:
+    if data.shape[0] == 0:
         print('No results found')
         return
     new_data = data.copy()
     new_data.drop(axis=0, labels=data.index[data['Comment'].str.len() == 0], inplace=True)
     new_data['Sentiment'] = new_data['Comment'].apply(score)
-    new_data['Comment'] = new_data['Comment']
+    new_data['Hardness'] = new_data['Comment'].apply(predict_difficulty)
     return new_data
 def score_keyword(search_word, subreddit_name, search_limit):
     raw_data = search_reddit(search_word, subreddit_name, search_limit)
