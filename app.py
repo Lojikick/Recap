@@ -51,9 +51,13 @@ def search_reddit(search_word, subreddit_name, search_limit):
     for submission in submissions:
         if (counter >= search_limit):
             break
+        slftxt = submission.selftext
+        url = submission.url
+        if (slftxt.find('Piazza') != -1 or url[-4:] == '.jpg'):
+            continue
         authors.append(submission.author.name)
-        comments.append(submission.selftext)
-        urls.append(submission.url)
+        comments.append(slftxt)
+        urls.append(url)
         titles.append(submission.title)
         counter+=1
         for comment in submission.comments:
