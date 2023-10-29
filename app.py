@@ -53,7 +53,7 @@ def search_reddit(search_word, subreddit_name, search_limit):
         #print(f"Comment: {submission.selftext}")
         urls.append(submission.url)
         titles.append(submission.title)
-    raw_data = pd.DataFrame({'Title': titles, 'Author':authors, 'Comment':comments, 'URL':urls})
+    raw_data = pd.DataFrame({'Title': titles, 'Comment':comments, 'URL':urls, 'Author':authors})
     return raw_data
 analyzer = SentimentIntensityAnalyzer()
 def get_emotion_emoji(score):
