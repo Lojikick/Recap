@@ -31,7 +31,7 @@ def account():
 
     if (request.method == "POST"): #Checking if the method of request was post
         res = request.form["prompt"] 
-        school = request.form["school"] #getting the name of the user from the form on home page
+        school = request.form["school"] 
         data = score_keyword(res, school, 75)
         avg_sentiment = round(calculate_average_sentiment(data), 2)
         avg_difficulty = round(calculate_average_difficulty(data)*10, 1)
@@ -136,7 +136,7 @@ hard_words = ['fail', 'failing', 'suck', 'hard', 'difficult', 'dumb', 'drop', 'd
     "knotty", "thorny", "ticklish", "obscure", "abstract", "abstruse",
     "recondite", "enigmatic", "impenetrable", "unfathomable", "over one's head",
     "above one's head", "beyond one", "fiddly", "sticky",
-    "gnarly", "wildering", "involute", "involuted", "😭", ":(", "wtf", "struggling", "fuck", "bad", "hurt", "dogshit"]
+    "gnarly", "wildering", "involute", "involuted", "😭", ":(", "wtf", "struggling", "fuck", "bad", "hurt", "dogshit", "challenging", "challenge"]
 easy_words = ["easy", "simple", "effortless", "light", "gentle", "smooth",
     "easygoing", "simple", "undemanding", "unpunishing", "easy",
     "smooth", "effortless", "relaxing", "refreshing", "restful",
@@ -195,8 +195,9 @@ def calculate_average_sentiment(data):
 def calculate_average_difficulty(data):
     if (data.shape[0] == 0):
         return 0
-    diffs = data['Comment'].apply(predict_difficulty).dropna()
-    return np.mean(diffs)
+    new_data = pd.DataFrame({'Author': data['Author'], 'Difficulty': data['Comment'].apply(predict_difficulty)}).dropna()
+    diffs = new_data.groupby('Author').mean()
+    return np.mean(diffs['Difficulty'])
 def format_data(data):
     """
     Input: DataFrame
