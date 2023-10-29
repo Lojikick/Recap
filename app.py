@@ -94,19 +94,6 @@ def process_data(data):
     new_data['Split'] = comments.str.split() # Create split column
     new_data = new_data[new_data['Split'].str.len() > 1] # Remove empty or one word rows
     new_data = new_data.set_index('Author')
-def words_in_texts(words, texts):
-    """
-    Args:
-        words (list): words to find
-        texts (Series): strings to search in
-    
-    Returns:
-        A 2D NumPy array of 0s and 1s with shape (n, p) where 
-        n is the number of texts and p is the number of words.
-    """
-    indicator_array = np.array([[int(isinstance(i, str)) for i in texts.str.extract("("+w+")", expand=False).tolist()] \
-                                for w in words]).transpose()
-    return indicator_array
 hard_words = ['fail', 'failing', 'suck', 'hard', 'difficult', 'dumb', 'drop', 'dropping', 'droppin', 'desperate', 'impossible',
     "hard", "strenuous", "arduous", "laborious", "heavy", "tough",
     "onerous", "burdensome", "demanding", "punishing", "grueling",
@@ -118,7 +105,7 @@ hard_words = ['fail', 'failing', 'suck', 'hard', 'difficult', 'dumb', 'drop', 'd
     "knotty", "thorny", "ticklish", "obscure", "abstract", "abstruse",
     "recondite", "enigmatic", "impenetrable", "unfathomable", "over one's head",
     "above one's head", "beyond one", "fiddly", "sticky",
-    "gnarly", "wildering", "involute", "involuted", "😭", ":(", "wtf"]
+    "gnarly", "wildering", "involute", "involuted", "😭", ":(", "wtf", "struggling", "fuck", "bad", "hurt", "dogshit"]
 easy_words = ["easy", "simple", "effortless", "light", "gentle", "smooth",
     "easygoing", "simple", "undemanding", "unpunishing", "easy",
     "smooth", "effortless", "relaxing", "refreshing", "restful",
@@ -129,7 +116,7 @@ easy_words = ["easy", "simple", "effortless", "light", "gentle", "smooth",
     "plain", "clear", "intelligible", "comprehensible", "simple",
     "shallow", "superficial", "commonplace", "basic", "self-explanatory",
     "easy", "troublesome", "straightforward", "clear", "obvious", "simple",
-    'trivial', 'A+', 'easy', 'so easy', 'excellent', 'free', 'chill', 'cool', 'dubs']
+    'trivial', 'A+', 'easy', 'so easy', 'excellent', 'free', 'chill', 'cool', 'dubs', 'gigachad', "good", "best", "light"]
 def score(phrase):
     num = analyzer.polarity_scores(phrase)['compound']
     return get_emotion_emoji(num) + str(round(num, 1))
