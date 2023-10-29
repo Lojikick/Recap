@@ -1,11 +1,11 @@
 {% extends "template.html" %} {% block body %}
 
 <h2>Home Page</h2>
-<p>Type in your class</p>
-
+<p>Type in your class and school</p>
 
 <form action="/account" method="POST">
     <input type="text" name="prompt" id="prompt" placeholder="Type Class" class="form-feild"><br>
+    <input type="text" name="school" id="school" placeholder="Type School" class="form-feild"><br>
     <button type="submit" class="add-btn">See Results</button>
 </form>
 <br>

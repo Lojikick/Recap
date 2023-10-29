@@ -8,7 +8,7 @@ import nltk
 nltk.download('vader_lexicon')
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 pd.options.mode.chained_assignment = None
-from sklearn.model_selection import GridSearchCV
+
 
 app = Flask(__name__) #initialising flask
 
@@ -28,12 +28,15 @@ def home():
 @app.route("/account", methods=["POST", "GET"]) #defining the routes for the account() funtion
 def account():
     res = "<User Not Defined>" #Creating a variable usr
-    output = score_keyword("cs170", 'berkeley', 200)
+
     if (request.method == "POST"): #Checking if the method of request was post
-        res = request.form["prompt"] #getting the name of the user from the form on home page
-        data = score_keyword(res, 'berkeley', 200)
-        avg_sentiment = calculate_average_sentiment(data)
-        avg_difficulty = calculate_average_difficulty(data)
+        res = request.form["prompt"] 
+        school = request.form["school"] #getting the name of the user from the form on home page
+        data = score_keyword(res, school, 75)
+        avg_sentiment = round(calculate_average_sentiment(data), 2)
+        avg_difficulty = 10*round(calculate_average_difficulty(data), 1)
+        avg_difficulty = str(avg_difficulty) + "/10.0"
+        data['Sentiment'] = data['Sentiment'].apply(add_emoji)
         # data = { 'Column1': [10, 20, 30], 'Column2': ['A', 'B', 'C'] }
         df = pd.DataFrame(data)
 
@@ -50,7 +53,7 @@ def account():
         sentiment = df.iloc[row,4] 
 
         div_elements += f'<div>{author}&nbsp;&nbsp;&nbsp;{comment}&nbsp;&nbsp;&nbsp;{sentiment}</div>'
-    return render_template("account.html", results=res, divs=div_elements) 
+    return render_template("account.html", results=res, divs=div_elements, sent = avg_sentiment, diff = avg_difficulty) 
 
     # our account.html contained within /templates
     # display_data(res, df)
@@ -145,7 +148,8 @@ easy_words = ["easy", "simple", "effortless", "light", "gentle", "smooth",
     "easy", "troublesome", "straightforward", "clear", "obvious", "simple",
     'trivial', 'A+', 'easy', 'so easy', 'excellent', 'free', 'chill', 'cool', 'dubs', 'gigachad', "good", "best", "light"]
 def score(phrase):
-    num = analyzer.polarity_scores(phrase)['compound']
+    return analyzer.polarity_scores(phrase)['compound']
+def add_emoji(num):
     return get_emotion_emoji(num) + str(round(num, 1))
 def predict_difficulty(input_string):
     input_string = input_string.lower()  # Convert the input string to lowercase for case-insensitive matching
