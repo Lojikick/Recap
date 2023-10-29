@@ -45,7 +45,6 @@ def search_reddit(search_word, subreddit_name, search_limit):
     else:
         submissions = reddit.subreddit('all').search(search_word, limit=search_limit)
     authors, comments, urls, titles = [], [], [], []
-
     # Iterate through the comments and extract their data
     for submission in submissions:
         authors.append(submission.author.name)
@@ -57,8 +56,19 @@ def search_reddit(search_word, subreddit_name, search_limit):
     raw_data = pd.DataFrame({'Title': titles, 'Author':authors, 'Comment':comments, 'URL':urls})
     return raw_data
 analyzer = SentimentIntensityAnalyzer()
+def get_emotion_emoji(score):
+        if score < -0.6:
+            return "😢"  # Very sad
+        elif score < -0.2:
+            return "😔"  # Somewhat sad
+        elif score > 0.6:
+            return "😄"  # Very happy
+        elif score > 0.2:
+            return "😊"  # Somewhat happy
+        else:
+            return "😐"  # Neutral
 def score(phrase):
-    return analyzer.polarity_scores(phrase)['compound']
+    return get_emotion_emoji(analyzer.polarity_scores(phrase)['compound']) + str(round(analyzer.polarity_scores(phrase)['compound'], 1))
 def score_data(data):
     new_data = data.copy()
     new_data.drop(axis=0, labels=data.index[data['Comment'].str.len() == 0], inplace=True)
