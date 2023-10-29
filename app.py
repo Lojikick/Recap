@@ -34,7 +34,7 @@ def account():
         school = request.form["school"] #getting the name of the user from the form on home page
         data = score_keyword(res, school, 75)
         avg_sentiment = round(calculate_average_sentiment(data), 2)
-        avg_difficulty = 10*round(calculate_average_difficulty(data), 1)
+        avg_difficulty = round(calculate_average_difficulty(data)*10, 1)
         avg_difficulty = str(avg_difficulty) + "/10.0"
         if (data.shape[0] > 0):
             data['Sentiment'] = data['Sentiment'].apply(add_emoji)
