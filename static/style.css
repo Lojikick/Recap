@@ -1,23 +1,22 @@
-
-/* Css files (Like this one) are where all the designing of the website is kept. */
-
 h1,
 h2,
 h3,
 h4,
 p {
-    font-family: verdana;
-    color: #0aff0a;
+    font-family: Arial, sans-serif;
+    color: #000; /* Set text color to black */
 }
 
 body {
-    display: inline;
-    font-family: verdana;
-    background-color: #2C2F33;
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5; /* Light gray background color */
+    margin: 0;
+    padding: 20px;
+    color: #666; /* Adjust default text color */
 }
 
 :root {
-    color: #d5e0e7;
+    color: #d5e0e7; /* Retained the color variable */
 }
 
 .add-btn {
@@ -31,13 +30,7 @@ body {
     margin: 10px;
 }
 
-.add-btn:hover {
-    color: #029902;
-    background-color: #00ff002f;
-    border: 1px solid #029902;
-    border-radius: 5px;
-}
-
+.add-btn:hover,
 .add-btn:focus {
     color: #029902;
     background-color: #00ff002f;
@@ -45,13 +38,30 @@ body {
     border-radius: 5px;
 }
 
-.form-feild {
+.form-field {
     height: 40px;
     width: 200px;
     border: 1px solid #99AAB5;
     border-radius: 5px;
     padding: 10px;
     margin: 10px;
-    background-color: #2C2F33;
+    background-color: #f5f5f5; /* Set background color to match the body */
 }
 
+/* .data-divs {
+    display: flex;
+    flex-wrap: wrap;
+} */
+.data-divs div {
+    border: 1px solid  #f5f5f5;
+    background-color: #f5f5f5;
+    color: #000;
+    padding: 5px;
+    margin: 5px;
+}
+
+.data-words div {
+    border: 1px solid #d800cd;
+    padding: 5px;
+    margin: 5px;
+}
