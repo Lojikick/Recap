@@ -36,7 +36,8 @@ def account():
         avg_sentiment = round(calculate_average_sentiment(data), 2)
         avg_difficulty = 10*round(calculate_average_difficulty(data), 1)
         avg_difficulty = str(avg_difficulty) + "/10.0"
-        data['Sentiment'] = data['Sentiment'].apply(add_emoji)
+        if (data.shape[0] > 0):
+            data['Sentiment'] = data['Sentiment'].apply(add_emoji)
         # data = { 'Column1': [10, 20, 30], 'Column2': ['A', 'B', 'C'] }
         df = pd.DataFrame(data)
 
@@ -169,7 +170,7 @@ def score_data(data):
     """
     if data.shape[0] == 0:
         print('No results found')
-        return
+        return data
     new_data = data.copy()
     new_data.drop(axis=0, labels=data.index[data['Comment'].str.len() == 0], inplace=True)
     new_data['Sentiment'] = new_data['Comment'].apply(score)
@@ -187,9 +188,13 @@ def top3bot3(data):
     bot3 = new_data.iloc[-3:, :]
     return top3, bot3
 def calculate_average_sentiment(data):
-    sentiments = data[['Author', 'Sentiment']].groupby('Author').mean()
+    if (data.shape[0] == 0):
+        return 0
+    sentiments = data[['Author', 'Sentiment']].dropna().groupby('Author').mean()
     return np.mean(sentiments['Sentiment'])
 def calculate_average_difficulty(data):
+    if (data.shape[0] == 0):
+        return 0
     diffs = data['Comment'].apply(predict_difficulty).dropna()
     return np.mean(diffs)
 def format_data(data):
