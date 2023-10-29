@@ -53,7 +53,7 @@ def account():
         link = df.iloc[row,2]
         sentiment = df.iloc[row,4] 
 
-        div_elements += f'<div>{author}&nbsp;&nbsp;&nbsp;{comment}&nbsp;&nbsp;&nbsp;{sentiment}</div>'
+        div_elements += f'<div>{author}&nbsp;&nbsp;&nbsp;<a href={link} target="_blank">{comment}</a>&nbsp;&nbsp;&nbsp;{sentiment}</div>'
     return render_template("account.html", results=res, divs=div_elements, sent = avg_sentiment, diff = avg_difficulty) 
 
     # our account.html contained within /templates
