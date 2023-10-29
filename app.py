@@ -44,7 +44,7 @@ def search_reddit(search_word, subreddit_name, search_limit):
         submissions = subreddit.search(search_word, limit=search_limit)  # You can adjust the limit as needed
     else:
         submissions = reddit.subreddit('all').search(search_word, limit=search_limit)
-    authors, comments, urls = [], [], []
+    authors, comments, urls, titles = [], [], [], []
 
     # Iterate through the comments and extract their data
     for submission in submissions:
@@ -53,7 +53,8 @@ def search_reddit(search_word, subreddit_name, search_limit):
         comments.append(submission.selftext)
         #print(f"Comment: {submission.selftext}")
         urls.append(submission.url)
-    raw_data = pd.DataFrame({'Author':authors, 'Comment':comments, 'URL':urls})
+        titles.append(submission.title)
+    raw_data = pd.DataFrame({'Title': titles, 'Author':authors, 'Comment':comments, 'URL':urls})
     return raw_data
 analyzer = SentimentIntensityAnalyzer()
 def score(phrase):
