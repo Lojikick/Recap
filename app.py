@@ -27,7 +27,7 @@ def home():
 @app.route("/account", methods=["POST", "GET"]) #defining the routes for the account() funtion
 def account():
     res = "<User Not Defined>" #Creating a variable usr
-    output = pd.DataFrame(np.random.randn(20, 5))
+    output = score_keyword('cs 170', 'berkeley', 200)
     if (request.method == "POST"): #Checking if the method of request was post
         res = request.form["prompt"] #getting the name of the user from the form on home page
         if not res: #if name is not defined it is set to default string
