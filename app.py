@@ -32,6 +32,8 @@ def account():
     if (request.method == "POST"): #Checking if the method of request was post
         res = request.form["prompt"] #getting the name of the user from the form on home page
         data = score_keyword(res, 'berkeley', 200)
+        avg_sentiment = calculate_average_sentiment(data)
+        avg_difficulty = calculate_average_difficulty(data)
         # data = { 'Column1': [10, 20, 30], 'Column2': ['A', 'B', 'C'] }
         df = pd.DataFrame(data)
 
@@ -101,17 +103,61 @@ def search_reddit(search_word, subreddit_name, search_limit):
 analyzer = SentimentIntensityAnalyzer()
 def get_emotion_emoji(score):
         if score < -0.6:
-            return ":cry:"  # Very sad
+            return "😢"  # Very sad
         elif score < -0.2:
-            return ":pensive:"  # Somewhat sad
+            return "😔"  # Somewhat sad
         elif score > 0.6:
-            return ":smile:"  # Very happy
+            return "😄"  # Very happy
         elif score > 0.2:
-            return ":blush:"  # Somewhat happy
+            return "😊"  # Somewhat happy
         else:
             return "😐"  # Neutral
+def process_data(data):
+    new_data = data.copy()
+    comments = new_data['Comment']
+    comments = comments.str.lower()
+    comments = comments.str.replace(r'http.*($|\s)', '') # Get rid of images
+    comments = comments.str.replace(r'[^\w|_|\s]|\n', ' ') # Get rid of punctuation and newlines
+    new_data['Split'] = comments.str.split() # Create split column
+    new_data = new_data[new_data['Split'].str.len() > 1] # Remove empty or one word rows
+    new_data = new_data.set_index('Author')
+hard_words = ['fail', 'failing', 'suck', 'hard', 'difficult', 'dumb', 'drop', 'dropping', 'droppin', 'desperate', 'impossible',
+    "hard", "strenuous", "arduous", "laborious", "heavy", "tough",
+    "onerous", "burdensome", "demanding", "punishing", "grueling",
+    "grinding", "back-breaking", "painful", "exhausting", "tiring",
+    "fatiguing", "wearing", "wearying", "wearisome", "hellish",
+    "killing", "knackering", "toilsome", "exigent", "problematic",
+    "puzzling", "baffling", "perplexing", "confusing", "mystifying",
+    "mysterious", "complicated", "complex", "involved", "intricate",
+    "knotty", "thorny", "ticklish", "obscure", "abstract", "abstruse",
+    "recondite", "enigmatic", "impenetrable", "unfathomable", "over one's head",
+    "above one's head", "beyond one", "fiddly", "sticky",
+    "gnarly", "wildering", "involute", "involuted", "😭", ":(", "wtf", "struggling", "fuck", "bad", "hurt", "dogshit"]
+easy_words = ["easy", "simple", "effortless", "light", "gentle", "smooth",
+    "easygoing", "simple", "undemanding", "unpunishing", "easy",
+    "smooth", "effortless", "relaxing", "refreshing", "restful",
+    "restorative", "refreshing", "restful", "restorative", "heavenly",
+    "delightful", "invigorating", "easy", "straightforward", "clear",
+    "obvious", "transparent", "self-explanatory", "clear", "self-evident",
+    "intelligible", "comprehensible", "simple", "uncomplicated", "easy",
+    "plain", "clear", "intelligible", "comprehensible", "simple",
+    "shallow", "superficial", "commonplace", "basic", "self-explanatory",
+    "easy", "troublesome", "straightforward", "clear", "obvious", "simple",
+    'trivial', 'A+', 'easy', 'so easy', 'excellent', 'free', 'chill', 'cool', 'dubs', 'gigachad', "good", "best", "light"]
 def score(phrase):
-    return get_emotion_emoji(analyzer.polarity_scores(phrase)['compound']) + str(round(analyzer.polarity_scores(phrase)['compound'], 1))
+    num = analyzer.polarity_scores(phrase)['compound']
+    return get_emotion_emoji(num) + str(round(num, 1))
+def predict_difficulty(input_string):
+    input_string = input_string.lower()  # Convert the input string to lowercase for case-insensitive matching
+
+    # Split the input string into words
+    words = input_string.split()
+
+    hard_score = sum(1 for word in words if word in hard_words)
+    easy_score = sum(1 for word in words if word in easy_words)
+    if hard_score + easy_score == 0:
+        return None
+    return hard_score/(hard_score + easy_score)
 def score_data(data):
     """
     Input: DataFrame
@@ -123,11 +169,33 @@ def score_data(data):
     new_data = data.copy()
     new_data.drop(axis=0, labels=data.index[data['Comment'].str.len() == 0], inplace=True)
     new_data['Sentiment'] = new_data['Comment'].apply(score)
-    new_data['Hardness'] = new_data['Comment'].apply(predict_difficulty)
     return new_data
 def score_keyword(search_word, subreddit_name, search_limit):
     raw_data = search_reddit(search_word, subreddit_name, search_limit)
     return score_data(raw_data)
+def top3bot3(data):
+    """
+    Input: DataFrame
+    Output: tuple (DataFrame, DataFrame)
+    """
+    new_data = data.sort_values('Sentiment', ascending=False)
+    top3 = new_data.iloc[:3, :]
+    bot3 = new_data.iloc[-3:, :]
+    return top3, bot3
+def calculate_average_sentiment(data):
+    sentiments = data[['Author', 'Sentiment']].groupby('Author').mean()
+    return np.mean(sentiments['Sentiment'])
+def calculate_average_difficulty(data):
+    diffs = data['Comment'].apply(predict_difficulty).dropna()
+    return np.mean(diffs)
+def format_data(data):
+    """
+    Input: DataFrame
+    Output: DataFrame
+    """
+    new_data = data.copy()
+    new_data['Comment'] = new_data['Comment'].str[:241]
+    return new_data
 
 if __name__ == "__main__": #checking if __name__'s value is '__main__'. __name__ is an python environment variable who's value will always be '__main__' till this is the first instatnce of app.py running
     app.run(debug=True,port=4949) #running flask (Initalised on line 4)
