@@ -49,7 +49,7 @@ def account():
     rows = list(df.index)
     for row in range(len(rows)):
         author = df.iloc[row,3]
-        comment = df.iloc[row,1][0:50]
+        comment = df.iloc[row,1][0:100]
         link = df.iloc[row,2]
         sentiment = df.iloc[row,4] 
 
